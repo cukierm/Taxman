@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {View, Text, Modal, TouchableOpacity, StyleSheet} from 'react-native';
 import { Input } from 'react-native-elements';
+import { Axios } from '../api/Axios';
+import axios from 'axios';
 
 
 class StartGame extends React.Component {
@@ -8,9 +10,10 @@ class StartGame extends React.Component {
 constructor(props) {
   super(props);
   this.state={
-    name: this.props.name,
+    name: '',
     numButtons: 20,
-    errMess:''
+    errMess:'',
+    user: ''
   }
 }
 
@@ -38,45 +41,50 @@ constructor(props) {
     //console.log('this.state.errMess is ', this.state.errMess);
 }
 
+checkUserExists = () => {
+
+Axios.get('/users')
+.then
+
+}
+
+makeUser = () => {
+  console.log('MakeUser got called, but has not done anything yet');
+
+  Axios.post('/users', {
+    name: this.state.name, 
+    highScore20: 0,
+    highScore50: 0
+  })
+  .then(res => {
+    console.log("this is the response from the post method: ", res.data);
+    console.log('--------------');
+    this.setState({user: res.data}, () => console.log("and this is the state of playagainComponent: ", this.state));
+    this.props.setUser(res.data);
+  })
+  .catch(err => console.log('error', err.message));
+
+}
 
 handleSubmit = () => {
-  if(this.state.numButtons > 0) {
-    this.props.changeMyStateStart(this.state.name, this.state.numButtons, this.neutralArray(), false);
-    this.setState({errMess:''});
+
+  //I need to figure out how to turn the below into the "else if" partbecause otherwise a new user will be created anytime someone plays the game! See Taxman to-do.
+  
+  console.log('the value of notFirstGame is ', this.props.firstGame);
+
+  if(this.props.firstGame && (this.state.numButtons==20  || this.state.numButtons==50)) {
+    console.log("I hope we're about to make a user.");
+    this.makeUser();
   }
-  if(this.state.name) {
 
-    this.setState({name: 'name'});
+  if(this.state.numButtons > 0) {
+    this.props.changeMyStateStart(this.state.name, this.state.numButtons, this.neutralArray(), false, this.state.user);
+    this.setState({errMess:''}, () => console.log('after submit, the value of firstGame is', this.props.firstGame));
+  }
 
-    fetch('localhost:3000/users', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: 'this.state.name'
-      }),
-    })
-    .then(response => {
-      if (response.ok) {
-        return response;
-      }
-      else {
-        const error = new Error(`The response was not OK`);
-        console.log(error);
-      }
-    })
-    .then(response => response.json())
-    .then((responseJson) => {
-      console.log(JSON.stringify(responseJson));
-      return(responseJson);
-    })
-    .catch((error) => {
-      const errMess = new Error('Failed to POST');
-      console.log(errMess);
-    });
 
-  }}
+
+}
 
   render() {
 

@@ -29,19 +29,37 @@ class Taxman extends React.Component {
       taxmanScore: 0,
       modalOpen: true, 
       gameActive: true,
+      user: null,
+      firstGame: true
     };
     this.createButtons = this.createButtons.bind(this);
     this.changeMyStateStart = this.changeMyStateStart.bind(this);
+    this.setUser = this.setUser.bind(this);
     this.resetState = this.resetState.bind(this);
+    this.setNotFirstGame = this.setNotFirstGame.bind(this);
   }
 
-  changeMyStateStart(newName, newNumButtons, newNeutral, newModalOpen) {
+  changeMyStateStart(newName, newNumButtons, newNeutral, newModalOpen, newUser) {
     this.setState({
       name: newName,
       numButtons: newNumButtons,
       neutral: newNeutral,
-      modalOpen: newModalOpen
+      modalOpen: newModalOpen, 
+      user: newUser
     }, this.tellMeState);
+  }
+
+  setUser(newUser) {
+    console.log(newUser);
+    this.setState({
+      user: newUser
+    }, () => console.log(this.state));
+  }
+
+  setNotFirstGame() {
+    this.setState({
+      firstGame: false
+    }, ()=> console.log('setNotFirstGame was called and the value of firstGame is ', this.state.firstGame))
   }
 
   resetState() {
@@ -56,11 +74,11 @@ class Taxman extends React.Component {
       taxmanScore: 0,
       modalOpen: true, 
       gameActive: true,
-    })
+    }, () => console.log('the state of taxman after reset is ', this.state))
   }
 
   tellMeState() {
-    console.log(JSON.stringify(this.state));
+    //console.log("Here is the Taxman state: ", JSON.stringify(this.state));
   }
 
   color = (i) => {
@@ -167,14 +185,16 @@ class Taxman extends React.Component {
     const buttons = [];
     for (let i = 1; i <= this.state.numButtons; i++) {
       buttons.push(
-        <TouchableOpacity style={{
-          backgroundColor:this.color(i),
-          width:30,
-          height:30,
-          margin: 5,
-          alignContent: 'center',
-          justifyContent: 'center',
-          borderRadius: 5
+        <TouchableOpacity 
+          key={i}
+          style={{
+            backgroundColor:this.color(i),
+            width:30,
+            height:30,
+            margin: 5,
+            alignContent: 'center',
+            justifyContent: 'center',
+            borderRadius: 5
           }}
           onPress={() => this.payout(i)}
           >
@@ -190,35 +210,52 @@ class Taxman extends React.Component {
   render() {
 
 
-  let result = '';
+    let result = '';
 
-  if(this.state.yourScore > this.state.taxmanScore) {
-    result = 'YOU WIN!!!';
-  }
-  else if (this.state.taxmanScore > this.state.yourScore) {
-    result = 'YOU LOSE!!!';
-  }
-  else { result = 'YOU TIE!!!';}
+    if(this.state.yourScore > this.state.taxmanScore) {
+      result = 'YOU WIN!!!';
+    }
+    else if (this.state.taxmanScore > this.state.yourScore) {
+      result = 'YOU LOSE!!!';
+    }
+    else { result = 'YOU TIE!!!';}
 
+    if (!this.state.gameActive) {
+      return (
+        <View style={{flex:1}}>
+        <ScrollView style={{flexDirection: 'column', flexGrow:1, marginTop:30}}>
+          <StartGame changeMyStateStart={this.changeMyStateStart} setUser={this.setUser} modalOpen={this.state.modalOpen} firstGame={this.state.firstGame}/>
 
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', flexWrap: 'wrap'}}>
+            {this.createButtons()}
+          </View>
+
+          <View>
+            <Score yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} />
+          </View>
+          <View>
+            <Playagain result={result} gameActive={this.state.gameActive} resetState={this.resetState} yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} name={this.state.name} numButtons={this.state.numButtons} user={this.state.user} setNotFirstGame={this.setNotFirstGame}/>
+          </View>
+        </ScrollView>
+        </View>
+      );
+    
+  } else {
     return (
       <View style={{flex:1}}>
-      <ScrollView style={{flexDirection: 'column', flexGrow:1, marginTop:30}}>
-        <StartGame changeMyStateStart={this.changeMyStateStart} modalOpen={this.state.modalOpen} name={this.state.name}/>
+        <ScrollView style={{flexDirection: 'column', flexGrow:1, marginTop:30}}>
+          <StartGame changeMyStateStart={this.changeMyStateStart} setUser={this.setUser} modalOpen={this.state.modalOpen} name={this.state.name} firstGame={this.state.firstGame}/>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', flexWrap: 'wrap'}}>
-          {this.createButtons()}
-        </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', flexWrap: 'wrap'}}>
+            {this.createButtons()}
+          </View>
 
-        <View>
-          <Score yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} />
+          <View>
+            <Score yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} />
+          </View>
+          </ScrollView>
         </View>
-        <View>
-          <Playagain result={result} gameActive={this.state.gameActive} resetState={this.resetState} yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} name={this.state.name} numButtons={this.state.numButtons}/>
-        </View>
-      </ScrollView>
-      </View>
-    );
+    );}
   }
 }
 
