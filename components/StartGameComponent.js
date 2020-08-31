@@ -1,8 +1,7 @@
 import * as React from 'react';
-import {View, Text, Modal, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, Text, Modal, TouchableOpacity, StyleSheet, Picker} from 'react-native';
 import { Input } from 'react-native-elements';
 import { Axios } from '../api/Axios';
-import axios from 'axios';
 
 
 class StartGame extends React.Component {
@@ -10,10 +9,10 @@ class StartGame extends React.Component {
 constructor(props) {
   super(props);
   this.state={
-    name: '',
+    name: this.props.name,
     numButtons: 20,
     errMess:'',
-    user: ''
+    user: null,
   }
 }
 
@@ -38,14 +37,23 @@ constructor(props) {
     }
     else errMess = '';
     this.setState({errMess: errMess})
-    //console.log('this.state.errMess is ', this.state.errMess);
 }
 
-checkUserExists = () => {
+getUserInfo = () => {
 
-Axios.get('/users')
-.then
-
+  Axios.get(`/users/getuser/${this.state.name}`)
+  .then(res => {
+    console.log("this is the response from the existing name check: ", res.data);
+    this.setState({user: res.data}, () => {
+      if(!this.state.user && (this.state.numButtons==20  || this.state.numButtons==50)) {
+          console.log("I hope we're about to make a user.");
+          this.makeUser();
+      } else {
+        this.props.setUser(res.data);
+      }
+    })
+  })
+  .catch(err => console.log('error', err.message));
 }
 
 makeUser = () => {
@@ -67,23 +75,17 @@ makeUser = () => {
 }
 
 handleSubmit = () => {
-
-  //I need to figure out how to turn the below into the "else if" partbecause otherwise a new user will be created anytime someone plays the game! See Taxman to-do.
   
-  console.log('the value of notFirstGame is ', this.props.firstGame);
+  console.log('state of startGame is', this.state);
 
-  if(this.props.firstGame && (this.state.numButtons==20  || this.state.numButtons==50)) {
-    console.log("I hope we're about to make a user.");
-    this.makeUser();
+  if(this.state.name) {
+  this.getUserInfo();
   }
 
   if(this.state.numButtons > 0) {
-    this.props.changeMyStateStart(this.state.name, this.state.numButtons, this.neutralArray(), false, this.state.user);
-    this.setState({errMess:''}, () => console.log('after submit, the value of firstGame is', this.props.firstGame));
+    this.props.changeMyStateStart(this.state.name, this.state.numButtons, this.neutralArray(), false);
+    this.setState({errMess:''});
   }
-
-
-
 }
 
   render() {
@@ -92,13 +94,19 @@ handleSubmit = () => {
 
   <Modal visible={this.props.modalOpen} animationType='slide' style={{marginTop: 20}}>
 
-    <View style={{flex: 1,
+    <View style={{flex: 2,
               alignItems:"center",
-              justifyContent:'space-around'}}>
+              justifyContent:'space-between',
+              margin: 40
+            }}
+              >
       <View style={{
             width: 200,
-            height: 50,
-            margin: 20
+            height: 300,
+             
+            //flex: 1,
+            alignItems:"center",
+            justifyContent:'space-around'
           }}
           >
 
@@ -109,14 +117,28 @@ handleSubmit = () => {
           />
 
           <Input  label='Enter a number of buttons:' labelStyle={{fontSize: 20, fontStyle: 'normal', color: 'black'}} 
-                  inputContainerStyle={{borderColor:"black", borderWidth:1}}  
+                  inputContainerStyle={{borderColor:"black", borderWidth:1, marginBottom:25}}  
                   onChangeText={text => this.setState({numButtons: Number(text)}, () => this.validate(this.state.numButtons))} 
                   value={this.state.numButtons} 
                   errorMessage={this.state.errMess}
                   renderErrorMessage
-         />
-      </View>
-      <View style={{}}>
+          />
+          <Input label='Or choose 20 or 50 for high score:' labelStyle={{fontSize: 20, fontStyle: 'normal', color: 'black'}}
+                inputContainerStyle={{borderColor:"white", borderWidth:1, height:1, margin: 0, padding: 0}} containerStyle={{margin: 0, padding: 0}} />
+
+
+         <Picker
+            selectedValue={this.state.numButtons}
+            style={{height: 50, width: 100, padding: 0}}
+            onValueChange={(itemValue) =>
+              this.setState({numButtons: itemValue})
+            }>
+            <Picker.Item label="20" value="20" />
+            <Picker.Item label="50" value="50" />
+          </Picker>
+
+</View>
+<View>
         <TouchableOpacity onPress={this.handleSubmit}
             style={styles.button}>
               <Text style={styles.Text}>OK</Text>
@@ -138,7 +160,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 30,
+    marginTop: 30,
     padding:3,
   }
 });

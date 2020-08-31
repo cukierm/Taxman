@@ -1,24 +1,28 @@
 import * as React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, Modal, Image, Dimensions } from 'react-native';
+import {Text} from 'react-native-elements';
 import { Axios } from '../api/Axios';
+
+const screenWidth = Dimensions.get('window').width
 
 class Playagain extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state={
-      gameHighScore20: 0,
-      gameHighScore50: 0
+      this.state={
+      newHighScore: false,
+      gameOverOpen: false
     }
-
     this.compareHighScore = this.compareHighScore.bind(this);
   }
 
   componentDidMount() {
-    console.log('CDM');
-    this.props.setNotFirstGame();
-    console.log()
-    this.compareHighScore();
+    if(this.props.user) {
+      this.setState({
+        highScore20: this.props.user.highScore20,
+        highScore50: this.props.user.highScore50,
+      }, this.compareHighScore())
+    }
   }
 
   compareHighScore = () => {
@@ -31,7 +35,7 @@ class Playagain extends React.Component {
         highScore20: this.props.yourScore
       })
       .then(res => {
-        this.setState({gameHighScore20: res.data.highScore20}, () => console.log('now the user objects high score is ', res.data.highScore20));
+        this.setState({highScore20: res.data.highScore20, newHighScore: true}, () => console.log('now the user objects high score is ', res.data.highScore20));
       })
       .catch(err => console.log("error: ", err.message));
     }
@@ -41,7 +45,7 @@ class Playagain extends React.Component {
       })
       .then(res => {
         console.log(res.data);
-        this.setState({gameHighScore50: res.data.highScore50});
+        this.setState({highScore50: res.data.highScore50, newHighScore: true});
       })
       .catch(err => console.log("error: ", err.message));
     }
@@ -49,60 +53,87 @@ class Playagain extends React.Component {
 
   render() {
     let winText = (this.props.yourScore >= this.props.taxmanScore) ? 'YOU WIN!!!' : 'YOU LOSE!!!'
-    console.log('this is the render method of playagain');
-    //if(!this.props.gameActive) {
-      //console.log('props of Playagain are ', this.props);
-      let highScore = '';
+
+      let highScore = null;
       if (this.props.numButtons == 20) {
-        highScore = this.state.gameHighScore20
-        console.log('this is the 20 if branch');
-        console.log('in the this.state, gameHighScore is ', this.state.gameHighScore20);
-        console.log('the value of the variable highScore is', highScore);
+        highScore = this.state.highScore20
       }
       else if (this.props.numButtons == 50) {
-        highScore = this.state.gameHighScore50
-        console.log('this is the 50 if branch');
-        console.log(highScore)
+        highScore = this.state.highScore50
       }
 
-      return(
-        <View>
-          <Text style={{fontSize: 30, alignSelf: "center"}}>{winText}</Text>
-          <Text style={{fontSize: 30, alignSelf: "center"}}>Your high score is {highScore || 'to be determined'}.</Text>
-          <View style={{margin: 20, }}>
-            <Text style={{fontSize: 20, alignSelf: "center"}}>Would you like to play again?</Text>
+      let highScoreSentence = null;
+      if (this.state.newHighScore) {
+        highScoreSentence = `Your new high score is ${highScore}!`
+      }
+      else if (this.props.user && (this.props.numButtons == 20 || this.props.numButtons == 50)) {
+        highScoreSentence = `Your high score is ${highScore}`
+      }
+
+        return(
+          <React.Fragment>
+          <View style={{flex:1, alignItems:"center"}}>
+            <Text style={{fontSize: 30, alignSelf: "center", marginTop:10}}>{winText}</Text>
+            <Text style={{fontSize: 25, alignSelf: "center"}}>{highScoreSentence}</Text>
+            <View style={{margin: 20 }}>
+              <Text style={{fontSize: 20, alignSelf: "center"}}>Would you like to play again?</Text>
+            </View>
+            <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-around'}}>
+              <TouchableOpacity onPress={() => {
+                this.props.resetState()}} style={styles.button}>
+                <Text style={styles.text}>YES</Text>
+              </TouchableOpacity>
+              <TouchableOpacity  onPress={() => this.setState({gameOverOpen: true})} style={styles.button}>
+                <Text style={styles.text}>NO</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-around'}}>
-            <TouchableOpacity onPress={() => {
-              console.log('trying to reset the state!');
-              this.props.resetState()}} style={styles.button}>
-              <Text style={styles.text}>YES</Text>
-            </TouchableOpacity>
-            <TouchableOpacity  onPress={() => console.log('game over')} style={styles.button}>
-              <Text style={styles.text}>NO</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    }
-    //else {return(<View></View>)}
-  //}
+
+          <Modal visible={this.state.gameOverOpen} animationType='slide' style={{marginTop: 20}}>
+
+            <View style={{
+                  width: "90%",
+                  height: "90%",
+                  alignItems: 'center'
+            }}>
+              <View style={{
+                    margin: '5%',
+                    alignItems:"center",
+                    justifyContent:'flex-start'
+              }}>
+                  <Text style={styles.goodbyeText}>Tax you later!</Text>
+                  <Image style ={styles.image} source={require('../assets/coins.png')} />
+              </View>
+            </View>
+          </Modal>
+        </React.Fragment>
+
+        );
+  }
 }
 
 const styles = StyleSheet.create({
-button: {
-  height: 50,
-  width: 100,
-  borderRadius: 5,
-  backgroundColor: '#F38DDD',
-  alignItems: 'center',
-  justifyContent: 'center',
-  margin: 10,
-  padding:3,
-},
-text: {
-  fontSize: 20
-}
+  button: {
+    height: 50,
+    width: 100,
+    borderRadius: 5,
+    backgroundColor: '#F38DDD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 10,
+    padding:3,
+  },
+  text: {
+    fontSize: 20
+  },
+  goodbyeText: {
+    fontSize: 40
+  },
+  image: {
+    flex: 1,
+    resizeMode: 'contain',
+    alignSelf: 'center'
+  }
 })
 
 export default Playagain;

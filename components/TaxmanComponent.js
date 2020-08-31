@@ -3,7 +3,6 @@ import { Text, View, Button, StyleSheet, Modal, TouchableOpacity, ScrollView } f
 import  Score  from './ScoreComponent';
 import Playagain from './PlayagainComponent';
 import StartGame from './StartGameComponent';
-import Instructions from './InstructionsComponent';
 
 function arrEqualityCheck (arr1, arr2) {
   if (arr1.length == arr2.length) {
@@ -30,23 +29,20 @@ class Taxman extends React.Component {
       modalOpen: true, 
       gameActive: true,
       user: null,
-      firstGame: true
     };
     this.createButtons = this.createButtons.bind(this);
     this.changeMyStateStart = this.changeMyStateStart.bind(this);
     this.setUser = this.setUser.bind(this);
     this.resetState = this.resetState.bind(this);
-    this.setNotFirstGame = this.setNotFirstGame.bind(this);
   }
 
-  changeMyStateStart(newName, newNumButtons, newNeutral, newModalOpen, newUser) {
+  changeMyStateStart(newName, newNumButtons, newNeutral, newModalOpen) {
     this.setState({
       name: newName,
       numButtons: newNumButtons,
       neutral: newNeutral,
       modalOpen: newModalOpen, 
-      user: newUser
-    }, this.tellMeState);
+    });
   }
 
   setUser(newUser) {
@@ -56,16 +52,8 @@ class Taxman extends React.Component {
     }, () => console.log(this.state));
   }
 
-  setNotFirstGame() {
-    this.setState({
-      firstGame: false
-    }, ()=> console.log('setNotFirstGame was called and the value of firstGame is ', this.state.firstGame))
-  }
-
   resetState() {
-    console.log('resetState function is being called');
     this.setState({
-      numButtons: 10,
       neutral: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 
       mine: [], 
       taxman: [], 
@@ -74,11 +62,7 @@ class Taxman extends React.Component {
       taxmanScore: 0,
       modalOpen: true, 
       gameActive: true,
-    }, () => console.log('the state of taxman after reset is ', this.state))
-  }
-
-  tellMeState() {
-    //console.log("Here is the Taxman state: ", JSON.stringify(this.state));
+    })
   }
 
   color = (i) => {
@@ -94,7 +78,6 @@ class Taxman extends React.Component {
     else if (this.state.taxman.includes(i)) {
       return '#2B59C3';
     }
-    else {console.log('something went wrong')}
   }
 
   payout(i) {
@@ -111,7 +94,6 @@ class Taxman extends React.Component {
 
 
       newNeutral.splice(index, 1); //remove the chosen number from the board
-      //console.log('newNeutral after splice is ', newNeutral);
 
       for (let j = 0; j < newNeutral.length; j++) {
         let potentialFactor = newNeutral[j];
@@ -128,7 +110,6 @@ class Taxman extends React.Component {
       newNeutral = newNeutral.filter((a) => newTaxman.indexOf(a) === -1); //remove numbers taken by the taxman from the neutral array
 
       newEliminated = newNeutral.filter((x) => {
-        //console.log('checking ', x);
           if (this.state.eliminated.includes(x)) {return true}
           else {
             for (let j=0; j < x; j++) {
@@ -159,7 +140,6 @@ class Taxman extends React.Component {
   computeScore() {
     let yourScore = 0;
     let taxmanScore = 0;
-    //console.log(JSON.stringify(this.state));
 
     if (this.state.mine) {
       yourScore = this.state.mine.reduce((a,b) => a+b, 0);
@@ -202,7 +182,12 @@ class Taxman extends React.Component {
         </TouchableOpacity>
       );
     }
-    //alert("I rendered!");
+    buttons.push(
+      <TouchableOpacity onPress={() => {
+        this.resetState()}} style={styles.restartButton} key={this.state.numButtons+1}>
+        <Text style={{fontSize:18}}>Start Over</Text>
+      </TouchableOpacity>
+    )
     return buttons;
   }
   //much credit: https://reactnative.dev/docs/button.html
@@ -224,17 +209,15 @@ class Taxman extends React.Component {
       return (
         <View style={{flex:1}}>
         <ScrollView style={{flexDirection: 'column', flexGrow:1, marginTop:30}}>
-          <StartGame changeMyStateStart={this.changeMyStateStart} setUser={this.setUser} modalOpen={this.state.modalOpen} firstGame={this.state.firstGame}/>
-
+          
           <View style={{ flexDirection: 'row', justifyContent: 'flex-start', flexWrap: 'wrap'}}>
             {this.createButtons()}
           </View>
-
           <View>
             <Score yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} />
           </View>
           <View>
-            <Playagain result={result} gameActive={this.state.gameActive} resetState={this.resetState} yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} name={this.state.name} numButtons={this.state.numButtons} user={this.state.user} setNotFirstGame={this.setNotFirstGame}/>
+            <Playagain result={result} gameActive={this.state.gameActive} resetState={this.resetState} yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} name={this.state.name} numButtons={this.state.numButtons} user={this.state.user}/>
           </View>
         </ScrollView>
         </View>
@@ -244,7 +227,7 @@ class Taxman extends React.Component {
     return (
       <View style={{flex:1}}>
         <ScrollView style={{flexDirection: 'column', flexGrow:1, marginTop:30}}>
-          <StartGame changeMyStateStart={this.changeMyStateStart} setUser={this.setUser} modalOpen={this.state.modalOpen} name={this.state.name} firstGame={this.state.firstGame}/>
+          <StartGame changeMyStateStart={this.changeMyStateStart} setUser={this.setUser} modalOpen={this.state.modalOpen} name={this.state.name} numButtons={this.state.numButtons}/>
 
           <View style={{ flexDirection: 'row', justifyContent: 'flex-start', flexWrap: 'wrap'}}>
             {this.createButtons()}
@@ -253,10 +236,26 @@ class Taxman extends React.Component {
           <View>
             <Score yourScore={this.state.yourScore} taxmanScore={this.state.taxmanScore} />
           </View>
-          </ScrollView>
-        </View>
+        </ScrollView>
+      </View>
     );}
   }
 }
 
+const styles = StyleSheet.create({
+restartButton: {
+  height: 30,
+  width: 100,
+  borderRadius: 5,
+  backgroundColor: '#F38DDD',
+  alignItems: 'center',
+  justifyContent: 'center',
+  margin:5,
+  padding:3,
+  marginBottom: 'auto'
+},
+text: {
+  fontSize: 20
+}
+})
 export default Taxman;
