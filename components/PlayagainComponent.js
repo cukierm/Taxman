@@ -92,12 +92,11 @@ class Playagain extends React.Component {
           <Modal visible={this.state.gameOverOpen} animationType='slide' style={{marginTop: 20}}>
 
             <View style={{
-                  width: "90%",
-                  height: "90%",
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  alignSelf: 'center',
             }}>
               <View style={{
-                    margin: '5%',
+                    marginTop:15,
                     alignItems:"center",
                     justifyContent:'flex-start'
               }}>

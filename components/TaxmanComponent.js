@@ -90,10 +90,9 @@ class Taxman extends React.Component {
 
     if (!(this.state.eliminated.includes(i) || this.state.mine.includes(i) || this.state.taxman.includes(i)))
       {
-        newMine.push(i); //award the chosen number to the player
+      newMine.push(i); //award the chosen number to the player
 
-
-      newNeutral.splice(index, 1); //remove the chosen number from the board
+      newNeutral.splice(index, 1); //remove the chosen number from the available numbers
 
       for (let j = 0; j < newNeutral.length; j++) {
         let potentialFactor = newNeutral[j];
@@ -110,7 +109,7 @@ class Taxman extends React.Component {
       newNeutral = newNeutral.filter((a) => newTaxman.indexOf(a) === -1); //remove numbers taken by the taxman from the neutral array
 
       newEliminated = newNeutral.filter((x) => {
-          if (this.state.eliminated.includes(x)) {return true}
+          if (this.state.eliminated.includes(x)) {return true} //x is already in the eliminated array
           else {
             for (let j=0; j < x; j++) {
               //console.log('checking if ', x, 'is divisible by ', newNeutral[j]);
@@ -130,7 +129,6 @@ class Taxman extends React.Component {
           taxman: newTaxman,
           neutral: newNeutral,
           eliminated: newEliminated
-          
         },
         this.computeScore
       );

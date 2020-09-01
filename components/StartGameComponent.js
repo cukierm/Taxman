@@ -43,10 +43,8 @@ getUserInfo = () => {
 
   Axios.get(`/users/getuser/${this.state.name}`)
   .then(res => {
-    console.log("this is the response from the existing name check: ", res.data);
     this.setState({user: res.data}, () => {
       if(!this.state.user && (this.state.numButtons==20  || this.state.numButtons==50)) {
-          console.log("I hope we're about to make a user.");
           this.makeUser();
       } else {
         this.props.setUser(res.data);
@@ -57,7 +55,7 @@ getUserInfo = () => {
 }
 
 makeUser = () => {
-  console.log('MakeUser got called, but has not done anything yet');
+  console.log('making a user');
 
   Axios.post('/users', {
     name: this.state.name, 
@@ -96,7 +94,7 @@ handleSubmit = () => {
 
     <View style={{flex: 2,
               alignItems:"center",
-              justifyContent:'space-between',
+              justifyContent:'space-around',
               margin: 40
             }}
               >
@@ -106,7 +104,7 @@ handleSubmit = () => {
              
             //flex: 1,
             alignItems:"center",
-            justifyContent:'space-around'
+            justifyContent:'center'
           }}
           >
 
@@ -119,7 +117,7 @@ handleSubmit = () => {
           <Input  label='Enter a number of buttons:' labelStyle={{fontSize: 20, fontStyle: 'normal', color: 'black'}} 
                   inputContainerStyle={{borderColor:"black", borderWidth:1, marginBottom:25}}  
                   onChangeText={text => this.setState({numButtons: Number(text)}, () => this.validate(this.state.numButtons))} 
-                  value={this.state.numButtons} 
+                  value={String(this.state.numButtons)} 
                   errorMessage={this.state.errMess}
                   renderErrorMessage
           />
@@ -137,13 +135,13 @@ handleSubmit = () => {
             <Picker.Item label="50" value="50" />
           </Picker>
 
-</View>
-<View>
+    
         <TouchableOpacity onPress={this.handleSubmit}
             style={styles.button}>
               <Text style={styles.Text}>OK</Text>
         </TouchableOpacity>
-      </View>
+
+    </View>
     </View>
   </Modal>
 
